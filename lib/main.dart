@@ -34,10 +34,9 @@ class GpsMapAppState extends State<GpsMapApp> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
+  int _polyLineIdCounter = 0;
+  Set<Polyline> _polyLines = {};
+  LatLng? _prevPosition;
 
   CameraPosition? _initialCameraPosition;
 
@@ -57,8 +56,21 @@ class GpsMapAppState extends State<GpsMapApp> {
     const locationSettings = LocationSettings();
     Geolocator.getPositionStream(locationSettings: locationSettings)
         .listen((Position position) {
-          _moveCamera(position);
-
+      _polyLineIdCounter++;
+      final polyLineId = PolylineId('$_polyLineIdCounter');
+      Polyline polyline = Polyline(
+          color: Colors.red,
+          width: 3,
+          polylineId: polyLineId,
+          points: [
+            _prevPosition ?? _initialCameraPosition!.target,
+            LatLng(position.latitude, position.longitude)
+          ]);
+      setState(() {
+        _polyLines.add(polyline);
+        _prevPosition = LatLng(position.latitude, position.longitude);
+      });
+      _moveCamera(position);
     });
   }
 
@@ -75,7 +87,7 @@ class GpsMapAppState extends State<GpsMapApp> {
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
               },
-        polylines: ,
+              polylines: _polyLines,
             ),
     );
   }
