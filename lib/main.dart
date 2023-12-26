@@ -39,30 +39,37 @@ class GpsMapAppState extends State<GpsMapApp> {
     zoom: 14.4746,
   );
 
-  CameraPosition? initialCameraPosition;
+  CameraPosition? _initialCameraPosition;
 
   @override
   void initState() {
     super.initState();
-
     init();
   }
 
   Future<void> init() async {
     final position = await _determinePosition();
-    print(position.toString());
+
+    _initialCameraPosition = CameraPosition(
+        target: LatLng(position.latitude, position.longitude), zoom: 17);
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: _kGooglePlex,
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-      ),
+      body: _initialCameraPosition == null
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : GoogleMap(
+              mapType: MapType.normal,
+              initialCameraPosition: _initialCameraPosition!,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _goToTheLake,
         label: const Text('To the lake!'),
